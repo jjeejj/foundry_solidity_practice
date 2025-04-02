@@ -10,7 +10,7 @@ contract CTest is Test {
         c = new C();
     }
 
-    function test_Foo() public {
+    function test_Foo() public view {
         console.log(c.foo());
     }
 }
