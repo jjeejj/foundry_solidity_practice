@@ -7,7 +7,7 @@ import './App.css';
 import { getContractConfig } from './config';
 
 // BuyEarth合约ABI
-const contractABI = import('./abi.json');
+import contractABI from './abi.json'; // 正确导入ABI
 
 // 从配置获取合约地址
 const contractConfig = getContractConfig();
