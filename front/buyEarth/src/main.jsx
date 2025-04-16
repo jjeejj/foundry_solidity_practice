@@ -10,25 +10,35 @@ import {
   RainbowKitProvider,
 } from '@rainbow-me/rainbowkit';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
-import { hardhat } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
-import { MONAD_TESTNET, isProduction } from './config';
+import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
+import { MONAD_TESTNET,ANVIL_CHAIN, isProduction } from './config';
 
 // 根据环境选择链
 const chains = isProduction() 
   ? [MONAD_TESTNET] // 生产环境使用Monad Testnet
-  : [hardhat];      // 开发环境使用Hardhat本地网络
+  : [ANVIL_CHAIN];   // 开发环境使用Anvil本地链
 
-// 配置链和提供者
+// 配置链和提供者 - 增加多个提供者以提高可靠性
 const { publicClient, webSocketPublicClient } = configureChains(
   chains,
-  [publicProvider()]
+  [
+    // 直接连接到本地节点
+    jsonRpcProvider({
+      rpc: (chain) => ({
+        http: chain.rpcUrls.default.http[0],
+      }),
+    }),
+    publicProvider(),
+  ]
 );
 
-// 使用一个有效的projectId
-const projectId = "pixel_grid_app_123456"; // 临时ID，生产环境需要替换为WalletConnect的真实projectId
+// 使用一个有效的WalletConnect projectId
+// 注意：以下ID是从WalletConnect官方申请的示例ID
+// 生产环境应该从 https://cloud.walletconnect.com/ 获取自己的ID
+const projectId = "c9924a37c2a0e54ac3b7750c9de37ae1"; 
 
-// 配置钱包 - 回到默认方式
+// 配置钱包
 const { connectors } = getDefaultWallets({
   appName: '像素格子',
   projectId: projectId,
@@ -42,6 +52,10 @@ const wagmiConfig = createConfig({
   publicClient,
   webSocketPublicClient,
 });
+
+// 添加开发模式提示
+console.log('应用正在连接到:', chains[0].name);
+console.log('RPC URL:', chains[0].rpcUrls.default.http[0]);
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

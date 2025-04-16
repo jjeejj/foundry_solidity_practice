@@ -1,3 +1,4 @@
+import { hardhat } from 'wagmi/chains';
 // 网络配置
 export const MONAD_TESTNET = {
     id: 10143,
@@ -23,6 +24,21 @@ export const MONAD_TESTNET = {
         },
     },
     testnet: true,
+};
+
+// 创建Anvil本地链配置
+export const ANVIL_CHAIN = {
+    ...hardhat,
+    name: 'Anvil',
+    network: 'anvil',
+    rpcUrls: {
+        default: {
+            http: ['http://127.0.0.1:8545'],
+        },
+        public: {
+            http: ['http://127.0.0.1:8545'],
+        },
+    },
 };
 
 // 合约地址配置

@@ -121,7 +121,43 @@ const App = () => {
   // 当合约数据更新时更新UI
   useEffect(() => {
     if (earthsData) {
-      setEarthData(Array.from(earthsData));
+      try {
+        // 定义一个安全的方式来处理BigInt值的JSON序列化
+        const safeStringify = (obj) => {
+          return JSON.stringify(obj, (key, value) => 
+            typeof value === 'bigint' ? value.toString() : value
+          );
+        };
+        
+        console.log("从合约获取到的数据:", safeStringify(earthsData));
+        
+        // 检查一下第一个方块的数据
+        if (earthsData[0]) {
+          console.log("第一个方块数据:", {
+            color: Number(earthsData[0].color),
+            price: Number(earthsData[0].price),
+            image_url: earthsData[0].image_url
+          });
+        }
+        
+        const earthDataArray = Array.from(earthsData).map(earth => ({
+          color: Number(earth.color),
+          price: Number(earth.price),
+          image_url: earth.image_url
+        }));
+        
+        console.log("处理后的方块数据:", earthDataArray[0]);
+        setEarthData(earthDataArray);
+      } catch (error) {
+        console.error("处理合约数据时出错:", error);
+        // 仍然尝试正常设置数据，即使日志有问题
+        const earthDataArray = Array.from(earthsData).map(earth => ({
+          color: Number(earth.color),
+          price: Number(earth.price),
+          image_url: earth.image_url
+        }));
+        setEarthData(earthDataArray);
+      }
     }
   }, [earthsData]);
 
@@ -136,6 +172,8 @@ const App = () => {
       showToast("请先连接钱包", "error");
       return;
     }
+
+    console.log(`点击方块 #${index}:`, earthData[index]);
 
     // 检查方块是否已被购买
     if (earthData[index].color !== 0) {
@@ -154,16 +192,15 @@ const App = () => {
       return;
     }
 
-    if (!imageUrl.trim()) {
-      showToast("请输入图片URL", "error");
-      return;
-    }
+    // 移除图片URL的必填验证
+    // 如果为空，使用空字符串
+    const finalImageUrl = imageUrl.trim() || "";
 
     // 如果是自定义颜色，使用颜色值的哈希作为颜色ID
     const colorId = selectedColor === 7 ? 7 : selectedColor;
 
     buyEarthWrite({
-      args: [selectedTile, colorId, imageUrl],
+      args: [selectedTile, colorId, finalImageUrl],
     });
   };
 
@@ -233,8 +270,8 @@ const App = () => {
                 <WalletInfo>
                   <WalletAddress>{`${address?.slice(0, 6)}...${address?.slice(-2)}`}</WalletAddress>
                   <NetworkInfo>
-                    <ConnectionStatus connected={isConnected}>
-                      <StatusDot connected={isConnected} />
+                    <ConnectionStatus $connected={isConnected}>
+                      <StatusDot $connected={isConnected} />
                       已连接
                     </ConnectionStatus>
                     {chain && <NetworkName>{chain.name}</NetworkName>}
@@ -268,7 +305,7 @@ const App = () => {
                     return (
                       <CustomColorContainer 
                         key={value} 
-                        selected={selectedColor === intValue} 
+                        $selected={selectedColor === intValue} 
                         onClick={() => setSelectedColor(intValue)}
                       >
                         <CustomColorLabel>自定义</CustomColorLabel>
@@ -290,7 +327,7 @@ const App = () => {
                     <ColorOption
                       key={value}
                       color={color}
-                      selected={selectedColor === intValue}
+                      $selected={selectedColor === intValue}
                       onClick={() => setSelectedColor(intValue)}
                     >
                       {selectedColor === intValue && (
@@ -464,7 +501,7 @@ const NetworkName = styled.div`
 
 const ConnectionStatus = styled.div`
   font-size: 11px;
-  color: ${props => props.connected ? '#27ae60' : '#e74c3c'};
+  color: ${props => props.$connected ? '#27ae60' : '#e74c3c'};
   display: flex;
   align-items: center;
   gap: 4px;
@@ -474,7 +511,7 @@ const StatusDot = styled.div`
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background-color: ${props => props.connected ? '#27ae60' : '#e74c3c'};
+  background-color: ${props => props.$connected ? '#27ae60' : '#e74c3c'};
 `;
 
 const LogoutButton = styled.button`
@@ -632,7 +669,7 @@ const ColorOption = styled.div`
   background-color: ${props => props.color};
   cursor: pointer;
   transition: all 0.2s;
-  border: 3px solid ${props => props.selected ? '#333' : 'transparent'};
+  border: 3px solid ${props => props.$selected ? '#333' : 'transparent'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -704,9 +741,9 @@ const CustomColorContainer = styled.div`
   width: 85px;
   height: 85px;
   border-radius: 10px;
-  background-color: ${props => props.selected ? '#f8f0ff' : '#ffffff'};
-  border: ${props => props.selected ? '2px solid #FF00FF' : '1px solid #ddd'};
-  box-shadow: ${props => props.selected ? '0 0 12px rgba(255, 0, 255, 0.5)' : '0 2px 5px rgba(0, 0, 0, 0.1)'};
+  background-color: ${props => props.$selected ? '#f8f0ff' : '#ffffff'};
+  border: ${props => props.$selected ? '2px solid #FF00FF' : '1px solid #ddd'};
+  box-shadow: ${props => props.$selected ? '0 0 12px rgba(255, 0, 255, 0.5)' : '0 2px 5px rgba(0, 0, 0, 0.1)'};
   transition: all 0.3s ease;
   padding: 8px;
   cursor: pointer;
