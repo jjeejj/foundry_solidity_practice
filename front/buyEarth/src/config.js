@@ -1,0 +1,50 @@
+// 网络配置
+export const MONAD_TESTNET = {
+    id: 202020,
+    name: 'Monad Testnet',
+    network: 'monad-testnet',
+    nativeCurrency: {
+        decimals: 18,
+        name: 'Monad',
+        symbol: 'MON',
+    },
+    rpcUrls: {
+        default: {
+            http: ['https://rpc.monadtest.com'],
+        },
+        public: {
+            http: ['https://rpc.monadtest.com'],
+        },
+    },
+    blockExplorers: {
+        default: {
+            name: 'Monad Explorer',
+            url: 'https://explorer.monadtest.com'
+        },
+    },
+    testnet: true,
+};
+
+// 合约地址配置
+export const CONTRACT_CONFIG = {
+    // 本地开发环境
+    development: {
+        address: "0x5FbDB2315678afecb367f032d93F642f64180aa3", // Hardhat默认部署地址
+        chainId: 31337, // Hardhat本地网络ID
+    },
+    // 测试网环境
+    production: {
+        address: "0xYourMonadTestnetContractAddress", // 替换为实际在Monad测试网上的合约地址
+        chainId: 202020, // Monad测试网ID
+    }
+};
+
+// 判断当前环境
+export const isProduction = () => {
+    return process.env.NODE_ENV === 'production';
+};
+
+// 获取当前环境的合约配置
+export const getContractConfig = () => {
+    return isProduction() ? CONTRACT_CONFIG.production : CONTRACT_CONFIG.development;
+}; 

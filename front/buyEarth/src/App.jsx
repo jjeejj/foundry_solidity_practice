@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useAccount, useConnect, useDisconnect, useContractRead, useContractWrite, useWaitForTransaction } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useContractRead, useContractWrite, useWaitForTransaction, useNetwork } from 'wagmi';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { parseEther } from 'viem';
 import styled from 'styled-components';
 import './App.css';
+import { getContractConfig } from './config';
 
 // BuyEarth合约ABI
 const contractABI = import('./abi.json');
 
-// 合约地址 - 需要替换为实际部署的合约地址
-const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
+// 从配置获取合约地址
+const contractConfig = getContractConfig();
+const contractAddress = contractConfig.address;
 
 // 颜色映射 - 保留6个常用颜色
 const colorMap = {
@@ -36,6 +38,7 @@ const App = () => {
   const [customColor, setCustomColor] = useState("#FF00FF"); // 默认自定义颜色为紫色
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
+  const { chain } = useNetwork(); // 获取当前连接的链
 
   // 读取所有方块数据
   const { data: earthsData, refetch } = useContractRead({
@@ -169,14 +172,17 @@ const App = () => {
             {isConnected ? (
               <WalletConnected>
                 <WalletAvatar>
-                  <WalletAvatarText>{address?.slice(0, 2)}</WalletAvatarText>
+                  <WalletAvatarText>{address?.slice(-2)}</WalletAvatarText>
                 </WalletAvatar>
                 <WalletInfo>
-                  <WalletAddress>{`${address?.slice(0, 6)}...${address?.slice(-4)}`}</WalletAddress>
-                  <ConnectionStatus connected={isConnected}>
-                    <StatusDot connected={isConnected} />
-                    已连接
-                  </ConnectionStatus>
+                  <WalletAddress>{`${address?.slice(0, 6)}...${address?.slice(-2)}`}</WalletAddress>
+                  <NetworkInfo>
+                    <ConnectionStatus connected={isConnected}>
+                      <StatusDot connected={isConnected} />
+                      已连接
+                    </ConnectionStatus>
+                    {chain && <NetworkName>{chain.name}</NetworkName>}
+                  </NetworkInfo>
                 </WalletInfo>
                 <LogoutButton onClick={disconnect}>
                   <LogoutIcon>⏏️</LogoutIcon>
@@ -184,10 +190,10 @@ const App = () => {
                 </LogoutButton>
               </WalletConnected>
             ) : (
-              <ConnectWalletButton>
+              <WalletConnectContainer>
                 <ConnectIcon>🔗</ConnectIcon>
                 <ConnectButton />
-              </ConnectWalletButton>
+              </WalletConnectContainer>
             )}
           </WalletSection>
         </Header>
@@ -262,7 +268,10 @@ const App = () => {
                   </BuyButton>
                 </PurchaseContainer>
               ) : (
-                <PlaceholderText>请先连接钱包以购买方块</PlaceholderText>
+                <NotConnectedContainer>
+                  <PlaceholderText>请先连接钱包以购买方块</PlaceholderText>
+                  <ConnectButton />
+                </NotConnectedContainer>
               )}
             </ConnectButtonWrapper>
           </ControlPanel>
@@ -382,6 +391,21 @@ const WalletAddress = styled.div`
   color: #333;
 `;
 
+const NetworkInfo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const NetworkName = styled.div`
+  font-size: 11px;
+  color: #3498db;
+  background-color: rgba(52, 152, 219, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+`;
+
 const ConnectionStatus = styled.div`
   font-size: 11px;
   color: ${props => props.connected ? '#27ae60' : '#e74c3c'};
@@ -426,7 +450,7 @@ const LogoutIcon = styled.span`
   font-size: 14px;
 `;
 
-const ConnectWalletButton = styled.div`
+const WalletConnectContainer = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
@@ -724,6 +748,15 @@ const BuyButton = styled.button`
     transform: none;
     box-shadow: none;
   }
+`;
+
+const NotConnectedContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  width: 100%;
+  padding: 10px 0;
 `;
 
 export default App;
