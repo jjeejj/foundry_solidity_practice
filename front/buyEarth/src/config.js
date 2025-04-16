@@ -2,7 +2,7 @@ import { hardhat } from 'wagmi/chains';
 // 网络配置
 export const MONAD_TESTNET = {
     id: 10143,
-    name: 'Monad Testnet',
+    name: 'Monad Test',
     network: 'monad-testnet',
     nativeCurrency: {
         decimals: 18,
@@ -50,7 +50,7 @@ export const CONTRACT_CONFIG = {
     },
     // 测试网环境
     production: {
-        address: "0xYourMonadTestnetContractAddress", // 替换为实际在Monad测试网上的合约地址
+        address: "0x8CA12E212F5c6668C0A93914997e9D8F968E67de", // 替换为实际在Monad测试网上的合约地址
         chainId: 10143, // Monad测试网ID
     }
 };

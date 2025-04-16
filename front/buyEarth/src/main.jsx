@@ -8,11 +8,22 @@ import '@rainbow-me/rainbowkit/styles.css';
 import {
   getDefaultWallets,
   RainbowKitProvider,
+  connectorsForWallets,
+  createAuthenticationAdapter,
+  darkTheme,
+  lightTheme
 } from '@rainbow-me/rainbowkit';
+import {
+  injectedWallet,
+  metaMaskWallet,
+  coinbaseWallet,
+  walletConnectWallet,
+} from '@rainbow-me/rainbowkit/wallets';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
+import { hardhat } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
-import { MONAD_TESTNET,ANVIL_CHAIN, isProduction } from './config';
+import { MONAD_TESTNET, ANVIL_CHAIN, isProduction } from './config';
 
 // 根据环境选择链
 const chains = isProduction() 
@@ -33,17 +44,22 @@ const { publicClient, webSocketPublicClient } = configureChains(
   ]
 );
 
-// 使用一个有效的WalletConnect projectId
-// 注意：以下ID是从WalletConnect官方申请的示例ID
-// 生产环境应该从 https://cloud.walletconnect.com/ 获取自己的ID
-const projectId = "c9924a37c2a0e54ac3b7750c9de37ae1"; 
+// 使用适合本地开发的钱包配置
+const projectId = "DEMO_PROJECT"; // 本地开发用的虚拟ID
 
-// 配置钱包
-const { connectors } = getDefaultWallets({
-  appName: '像素格子',
-  projectId: projectId,
-  chains
-});
+// 配置可用的钱包
+const availableWallets = [
+  injectedWallet({ chains }),
+  metaMaskWallet({ chains, projectId }),
+  coinbaseWallet({ chains, appName: '像素格子' }),
+];
+
+const connectors = connectorsForWallets([
+  {
+    groupName: '推荐钱包',
+    wallets: availableWallets,
+  },
+]);
 
 // 创建Wagmi配置
 const wagmiConfig = createConfig({
@@ -60,7 +76,14 @@ console.log('RPC URL:', chains[0].rpcUrls.default.http[0]);
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains} modalSize="compact">
+      <RainbowKitProvider 
+        chains={chains} 
+        modalSize="compact"
+        theme={lightTheme({
+          accentColor: '#3498db',
+          borderRadius: 'medium',
+        })}
+      >
         <App />
       </RainbowKitProvider>
     </WagmiConfig>
