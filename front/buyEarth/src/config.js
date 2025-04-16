@@ -1,6 +1,6 @@
 // 网络配置
 export const MONAD_TESTNET = {
-    id: 202020,
+    id: 10143,
     name: 'Monad Testnet',
     network: 'monad-testnet',
     nativeCurrency: {
@@ -10,16 +10,16 @@ export const MONAD_TESTNET = {
     },
     rpcUrls: {
         default: {
-            http: ['https://rpc.monadtest.com'],
+            http: ['https://testnet-rpc.monad.xyz'],
         },
         public: {
-            http: ['https://rpc.monadtest.com'],
+            http: ['https://testnet-rpc.monad.xyz'],
         },
     },
     blockExplorers: {
         default: {
             name: 'Monad Explorer',
-            url: 'https://explorer.monadtest.com'
+            url: 'https://testnet.monadexplorer.com'
         },
     },
     testnet: true,
@@ -35,7 +35,7 @@ export const CONTRACT_CONFIG = {
     // 测试网环境
     production: {
         address: "0xYourMonadTestnetContractAddress", // 替换为实际在Monad测试网上的合约地址
-        chainId: 202020, // Monad测试网ID
+        chainId: 10143, // Monad测试网ID
     }
 };
 

@@ -30,6 +30,30 @@ const handprintIcon = {
   viewBox: "0 0 24 24"
 };
 
+// 自定义Toast组件
+const Toast = ({ message, isVisible, onClose, type = "info" }) => {
+  useEffect(() => {
+    if (isVisible) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isVisible, onClose]);
+
+  if (!isVisible) return null;
+
+  return (
+    <ToastContainer>
+      <ToastContent type={type}>
+        <ToastIcon>{type === "error" ? "⚠️" : "ℹ️"}</ToastIcon>
+        <ToastMessage>{message}</ToastMessage>
+        <ToastCloseButton onClick={onClose}>OK</ToastCloseButton>
+      </ToastContent>
+    </ToastContainer>
+  );
+};
+
 const App = () => {
   const [selectedColor, setSelectedColor] = useState(1); // 默认选择红色
   const [selectedTile, setSelectedTile] = useState(null);
@@ -39,6 +63,30 @@ const App = () => {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { chain } = useNetwork(); // 获取当前连接的链
+  
+  // Toast状态
+  const [toast, setToast] = useState({
+    visible: false,
+    message: "",
+    type: "info"
+  });
+
+  // 显示Toast消息
+  const showToast = (message, type = "info") => {
+    setToast({
+      visible: true,
+      message,
+      type
+    });
+  };
+
+  // 关闭Toast
+  const closeToast = () => {
+    setToast(prev => ({
+      ...prev,
+      visible: false
+    }));
+  };
 
   // 读取所有方块数据
   const { data: earthsData, refetch } = useContractRead({
@@ -66,6 +114,7 @@ const App = () => {
     if (isSuccess) {
       refetch();
       setSelectedTile(null);
+      showToast("方块购买成功！", "info");
     }
   }, [isSuccess, refetch]);
 
@@ -84,28 +133,29 @@ const App = () => {
   // 处理方块点击
   const handleTileClick = (index) => {
     if (!isConnected) {
-      alert('请先连接钱包');
+      showToast("请先连接钱包", "error");
       return;
     }
 
     // 检查方块是否已被购买
     if (earthData[index].color !== 0) {
-      alert('这个方块已经被购买了');
+      showToast("这个方块已经被购买了", "error");
       return;
     }
 
     setSelectedTile(index);
+    showToast(`已选择方块 #${index}`, "info");
   };
 
   // 处理购买方块
   const handleBuyEarth = () => {
     if (selectedTile === null) {
-      alert('请先选择一个方块');
+      showToast("请先选择一个方块", "error");
       return;
     }
 
     if (!imageUrl.trim()) {
-      alert('请输入图片URL');
+      showToast("请输入图片URL", "error");
       return;
     }
 
@@ -145,9 +195,9 @@ const App = () => {
             <Tile
               key={index}
               color={color}
-              isSelected={isSelected}
+              $isSelected={isSelected}
               onClick={() => handleTileClick(index)}
-              purchased={isPurchased}
+              $purchased={isPurchased}
             >
               {hasImage && <TileImage src={earth.image_url} alt={`Tile ${index}`} />}
             </Tile>
@@ -159,6 +209,12 @@ const App = () => {
 
   return (
     <Container>
+      <Toast 
+        message={toast.message} 
+        isVisible={toast.visible} 
+        onClose={closeToast} 
+        type={toast.type} 
+      />
       <Card>
         <Header>
           <Logo>
@@ -498,16 +554,16 @@ const Grid = styled.div`
 
 const Tile = styled.div`
   background-color: ${props => props.color};
-  border: ${props => props.isSelected ? '2px solid #000' : '1px solid #ccc'};
-  cursor: ${props => props.purchased ? 'not-allowed' : 'pointer'};
+  border: ${props => props.$isSelected ? '2px solid #000' : '1px solid #ccc'};
+  cursor: ${props => props.$purchased ? 'not-allowed' : 'pointer'};
   transition: all 0.2s ease;
   position: relative;
   border-radius: 3px;
-  box-shadow: ${props => props.isSelected ? '0 0 8px rgba(0, 0, 0, 0.3)' : 'none'};
+  box-shadow: ${props => props.$isSelected ? '0 0 8px rgba(0, 0, 0, 0.3)' : 'none'};
 
   &:hover {
-    transform: ${props => props.purchased ? 'none' : 'scale(1.05)'};
-    box-shadow: ${props => props.purchased ? 'none' : '0 0 5px rgba(0,0,0,0.2)'};
+    transform: ${props => props.$purchased ? 'none' : 'scale(1.05)'};
+    box-shadow: ${props => props.$purchased ? 'none' : '0 0 5px rgba(0,0,0,0.2)'};
     z-index: 1;
   }
 `;
@@ -757,6 +813,72 @@ const NotConnectedContainer = styled.div`
   gap: 15px;
   width: 100%;
   padding: 10px 0;
+`;
+
+// Toast样式组件
+const ToastContainer = styled.div`
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+`;
+
+const ToastContent = styled.div`
+  display: flex;
+  align-items: center;
+  padding: 14px 18px;
+  background-color: ${props => props.type === "error" ? "rgba(231, 76, 60, 0.9)" : "rgba(52, 152, 219, 0.9)"};
+  color: white;
+  border-radius: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideDown 0.3s ease-out forwards;
+  width: 100%;
+  backdrop-filter: blur(5px);
+  border: 1px solid ${props => props.type === "error" ? "rgba(231, 76, 60, 0.6)" : "rgba(52, 152, 219, 0.6)"};
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+`;
+
+const ToastIcon = styled.div`
+  margin-right: 10px;
+  font-size: 20px;
+`;
+
+const ToastMessage = styled.div`
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const ToastCloseButton = styled.button`
+  background-color: rgba(255, 255, 255, 0.25);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: 10px;
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.35);
+  }
 `;
 
 export default App;
