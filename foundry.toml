@@ -7,3 +7,4 @@ libs = ["lib"]
 
 [rpc_endpoints]
 Monnad_TestNet = "https://testnet-rpc.monad.xyz"
+Anvil = "http://127.0.0.1:8545"
