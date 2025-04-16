@@ -101,7 +101,7 @@ const App = () => {
     address: contractAddress,
     abi: contractABI,
     functionName: 'buyEarth',
-    value: parseEther('0.001'),
+    value: parseEther('0.01'),
   });
 
   // 等待交易完成
